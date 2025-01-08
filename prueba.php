@@ -21,14 +21,18 @@ $valor2 = 2;
 // }else {
 //     echo "No es menor";
 // }
+$variable = 2;
 
-     switch ($variable) {
-    case 'value':
-        # code...
+switch ($variable) {
+    case 1:
+        echo "Se elegio el 1";
         break;
-    
+
+    case 2:
+        echo "Se elegio el 2";
+            break;
     default:
-        # code...
+        echo "No se eligió ninguna opción.";
         break;
 }
 
