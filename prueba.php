@@ -23,17 +23,29 @@ $valor2 = 2;
 // }
 $variable = 2;
 
-switch ($variable) {
-    case 1:
-        echo "Se elegio el 1";
-        break;
+// switch ($variable) {
+//     case 1:
+//         echo "Se elegio el 1";
+//         break;
 
-    case 2:
-        echo "Se elegio el 2";
-            break;
-    default:
-        echo "No se eligió ninguna opción.";
-        break;
+//     case 2:
+//         echo "Se elegio el 2";
+//             break;
+//     default:
+//         echo "No se eligió ninguna opción.";
+//         break;
+// }
+
+
+//WHILE
+$a = 2;
+while ($a <= 10) {
+    echo $a;
+    $a++ ;
+}
+
+for ($i=0; $i < 8; $i++) { 
+    echo " hola $i";
 }
 
 ?>
