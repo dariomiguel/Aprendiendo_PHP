@@ -1,7 +1,7 @@
 //@version=6
 // Esta es una modificación del indicador CM_Williams_Vix_Fix.
 // Original script https://www.tradingview.com/script/og7JPrRA-CM-Williams-Vix-Fix-Finds-Market-Bottoms/
-indicator('CM_Williams_Vix_Fix - Market Top and Bottom', overlay = false, timeframe = '', timeframe_gaps = true)
+indicator('Vix_Fix -- Top and Bottom + Stochastic', overlay = false, timeframe = '', timeframe_gaps = true)
 periodoRetroceso = input(22, title = 'Período de retrocesos para máximos') //pd_LookBack Period Standard Deviation High
 largoDeBandaBollinger = input(20, title = 'Longitud de la Banda de Bollinger') //bbl_
 multiplicadorDeDesviasionEstandar = input.float(2.0, minval = 1, maxval = 5, title = 'Multiplicador de Desviación Estándar') //mult_Bollinger Band Standard Devaition Up
@@ -34,7 +34,7 @@ bandaSuperior1 = lineaMedia1 + desviacionEstandarWvf1
 rangoBajo = ta.lowest(wvf1, periodoRetrocesoPercentil) * nivelPercentil
 
 // Asignar colores a los rangos
-colorMarketTop = wvf1 <= bandaInferior1 or wvf1 <= rangoBajo ? color.red : color.new(color.gray, 75)
+colorMarketTop = wvf1 <= bandaInferior1 or wvf1 <= rangoBajo ? color.red :color.new(color.gray, 75)
 colorMarketBottom = wvf >= bandaSuperior or wvf >= rangoAlto ? color.lime : color.new(color.gray, 75)
 
 
@@ -48,8 +48,9 @@ alertcondition(bottomAlert, 'Bottom', 'Bottom reached')
 
 //Graficar barras
 hline(50, 'Zero Line', color = color.new(#787B86, 50))
-plot(-100 * wvf1 + 100, title = 'Market Top', style = plot.style_columns, linewidth = 4, color = colorMarketTop)
-plot(-100 * wvf + 100, title = 'Market Bottom', style = plot.style_columns, linewidth = 4, color = colorMarketBottom)
+
+plot((-100 * wvf1) , title = 'Market Top', style = plot.style_columns, linewidth = 4, color = colorMarketTop)
+plot((-100 * wvf) , title = 'Market Bottom', style = plot.style_columns, linewidth = 4, color = colorMarketBottom)
 
 
 //--------------
