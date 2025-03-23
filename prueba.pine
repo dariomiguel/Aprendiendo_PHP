@@ -1,0 +1,48 @@
+//@version=5
+// ESta es una modificación del indicador CM_Williams_Vix_Fix.
+// Original script https://www.tradingview.com/script/og7JPrRA-CM-Williams-Vix-Fix-Finds-Market-Bottoms/
+indicator("CM_Williams_Vix_Fix - Market Top and Bottom", overlay=false, timeframe="", timeframe_gaps=true)
+periodoRetroceso = input(22, title="LookBack Period Standard Deviation High")
+largoDeBandaBollinger = input(20, title="Bollinger Band Length")
+multiplicadorDeDesviasionEstandar = input.float(2.0, minval=1, maxval=5, title="Bollinger Band Standard Devaition Up")
+periodoRetrocesoPercentil  = input(50  , title="Look Back Period Percentile High")
+nivelPercentil = input(.85, title="Percentile - 0.90=90%, 0.95=95%, 0.99=99%")
+
+// Code to find bottom
+//
+//Calcula el precio más alto del cierre  en los últimos periodoRetroceso.
+wvf = ((ta.highest(close, periodoRetroceso)-low)/(ta.highest(close, periodoRetroceso)))*100
+
+sDev = multiplicadorDeDesviasionEstandar * ta.stdev(wvf, largoDeBandaBollinger)
+midLine = ta.sma(wvf, largoDeBandaBollinger)
+bandaInferior = midLine - sDev
+bandaSuperior = midLine + sDev
+
+rangeHigh = (ta.highest(wvf, periodoRetrocesoPercentil )) * nivelPercentil
+
+
+// Code to find top
+//
+//Calcula el precio más bajo del cierre  en los últimos periodoRetroceso.
+wvf1 = ((ta.lowest(close, periodoRetroceso)-high)/(ta.lowest(close, periodoRetroceso)))*100
+
+sDev1 = multiplicadorDeDesviasionEstandar * ta.stdev(wvf1, largoDeBandaBollinger)
+midLine1 = ta.sma(wvf1, largoDeBandaBollinger)
+bandaInferior1 = midLine1 - sDev1
+bandaSuperior1 = midLine1 + sDev1
+
+rangeLow1 = (ta.lowest(wvf1, periodoRetrocesoPercentil )) * nivelPercentil
+
+colorMarketBottom = wvf >= bandaSuperior or wvf >= rangeHigh ? color.red : color.gray
+colorMarketTop = wvf1 <= bandaInferior1 or wvf1 <= rangeLow1 ? color.lime: color.gray
+
+// Alerts added
+topAlert = (colorMarketBottom[0] == color.lime) and (colorMarketBottom[1] == color.gray)
+bottomAlert = (colorMarketBottom[0] == color.red) and (colorMarketBottom[1] == color.gray)
+
+alertcondition(topAlert, "Top", "Top reached")
+alertcondition(bottomAlert, "Bottom", "Bottom reached")
+
+hline(0, "Zero Line", color=color.new(#787B86, 50))
+plot(-1 * wvf, title="Market Bottom", style=plot.style_columns, linewidth = 4, color=colorMarketBottom)
+plot(-1 * wvf1, title="Market Top", style=plot.style_columns, linewidth = 4, color=colorMarketTop)

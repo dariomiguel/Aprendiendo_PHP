@@ -38,14 +38,17 @@ $variable = 2;
 
 
 //WHILE
-$a = 2;
-while ($a <= 10) {
-    echo $a;
-    $a++ ;
-}
+// $a = 2;
+// while ($a <= 10) {
+//     echo $a;
+//     $a++ ;
+// }
 
-for ($i=0; $i < 8; $i++) { 
-    echo " hola $i";
-}
+// for ($i=0; $i < 8; $i++) { 
+//     echo " hola $i";
+// }
+
+//ARRAYS 
+
 
 ?>
