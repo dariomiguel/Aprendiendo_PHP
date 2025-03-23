@@ -45,7 +45,7 @@ bottomAlert = colorMarketBottom[0] == color.lime and colorMarketBottom[1] == col
 // Crear una alerta combinada usando "or"
 alertaCombinada = topAlert or bottomAlert
 
-alertcondition(topAlert, 'Atento BTC! ', 'Top or bottom alcanzado!')
+alertcondition(alertaCombinada, 'Atento BTC! ', 'Top or bottom alcanzado!')
 
 //Graficar barras
 hline(50, 'Zero Line', color = color.new(#787B86, 50))
