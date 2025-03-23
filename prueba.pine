@@ -42,9 +42,10 @@ colorMarketBottom = wvf >= bandaSuperior or wvf >= rangoAlto ? color.lime : colo
 topAlert = colorMarketTop[0] == color.red and colorMarketTop[1] == color.new(color.gray, 75)
 bottomAlert = colorMarketBottom[0] == color.lime and colorMarketBottom[1] == color.new(color.gray, 75)
 
-alertcondition(topAlert, 'Top', 'Top reached')
-alertcondition(bottomAlert, 'Bottom', 'Bottom reached')
+// Crear una alerta combinada usando "or"
+alertaCombinada = topAlert or bottomAlert
 
+alertcondition(topAlert, 'Atento BTC! ', 'Top or bottom alcanzado!')
 
 //Graficar barras
 hline(50, 'Zero Line', color = color.new(#787B86, 50))
