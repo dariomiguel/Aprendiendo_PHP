@@ -1,0 +1,36 @@
+//@version=6
+indicator("Señal de Compra Segura", overlay=true)
+
+ema20 = ta.ema(close, 20)
+ema50 = ta.ema(close, 50)
+ema100 = ta.ema(close, 100)
+ema200 = ta.ema(close, 200)
+
+plot(ema20, color = color.red, title = "EMA 20")
+plot(ema50, color = color.orange, title = "EMA 50")
+plot(ema100, color = color.aqua, title = "EMA 100")
+plot(ema200, color = color.blue, title = "EMA 200")
+
+// Parámetros
+periodo_estocastico = 14
+suavizado = 3
+
+// Estocástico
+k = ta.stoch(high, low, close, periodo_estocastico)
+d = ta.sma(k, suavizado)  // Suavizado de la línea %K para obtener %D
+
+
+// Divergencia alcista
+bullish_divergence = ta.lowest(low, 5) < ta.lowest(low, 5)[1] and ta.lowest(k, 5) > ta.lowest(k, 5)[1]
+
+// Cruce en sobreventa
+stoch_cross = ta.crossover(k, d) and k < 20
+
+// Confirmación EMA
+ema_confirmation = close > ema20
+
+// Señal final
+buy_signal = bullish_divergence and stoch_cross and ema_confirmation
+
+// Alerta
+alertcondition(buy_signal, "Compra Confluente", "Entrada segura detectada")

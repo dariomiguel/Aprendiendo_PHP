@@ -1,0 +1,89 @@
+//@version=6
+strategy("Señal de Compra y Venta Confluente + Volumen, RSI y MACD", overlay=true, initial_capital=10, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
+
+//====================
+// Cálculo de EMAs
+//====================
+ema20 = ta.ema(close, 20)
+ema50 = ta.ema(close, 50)
+ema100 = ta.ema(close, 100)
+ema200 = ta.ema(close, 200)
+
+plot(ema20, color=color.red, title="EMA 20")
+plot(ema50, color=color.orange, title="EMA 50")
+plot(ema100, color=color.aqua, title="EMA 100")
+plot(ema200, color=color.blue, title="EMA 200")
+
+//====================
+// Estocástico para señales de compra/venta
+//====================
+periodo_estocastico = 15
+suavizado = 3
+k = ta.stoch(high, low, close, periodo_estocastico)
+d = ta.sma(k, suavizado)
+
+// Señal de COMPRA
+// Asignar los valores de ta.lowest() a variables globales
+lowestLow5       = ta.lowest(low, 5)
+prevLowestLow5   = lowestLow5[1]
+
+lowestK5         = ta.lowest(k, 5)
+prevLowestK5     = lowestK5[1]
+
+// Ahora usar las variables en la condición
+bullish_divergence = (lowestLow5 < prevLowestLow5) and (lowestK5 > prevLowestK5)
+
+stoch_cross = ta.crossover(k, d) and (k < 20)
+ema_confirmation = close > ema20
+buy_signal = bullish_divergence and stoch_cross and ema_confirmation
+
+if (buy_signal)
+    strategy.entry("Buy", strategy.long)
+alertcondition(buy_signal, title="Compra Confluente", message="Entrada segura detectada")
+
+
+
+//====================
+// Señal de VENTA
+//====================
+// Tendencia diaria evaluada en gráfico diario
+tendenciaDiariaAlcista = request.security(syminfo.tickerid, "D", ta.ema(close, 50) > ta.ema(close, 200))
+
+// Asignar el resultado de ta.crossunder() a una variable global
+crossUnderSignal = ta.crossunder(k, d)
+
+// Utilizar la variable en la condición
+sellSignal = tendenciaDiariaAlcista and crossUnderSignal and (close < ema20)
+
+atr = ta.atr(15)
+entryPrice = close
+
+if (sellSignal)
+    strategy.entry("Sell", strategy.short)
+    stopLoss = entryPrice + (atr * 2)
+    takeProfit = entryPrice - (atr * 3)
+    strategy.exit("Exit Sell", "Sell", stop=stopLoss, limit=takeProfit)
+alertcondition(sellSignal, title="Vender con SL Dinámico", message="¡Oportunidad de Venta!")
+
+//====================
+// Indicador de Volumen
+//====================
+plot(volume / 1000, title="Volumen (x1000)", color=color.new(color.purple, 40), style=plot.style_columns)
+
+//====================
+// Indicador RSI
+//====================
+rsiValue = ta.rsi(close, 15)
+plot(rsiValue, title="RSI", color=color.blue)
+
+//====================
+// Indicador MACD
+//====================
+[macdLine, signalLine, histLine] = ta.macd(close, 12, 26, 9)
+plot(macdLine, title="MACD", color=color.red)
+plot(signalLine, title="MACD Señal", color=color.blue)
+plot(histLine, title="Histograma MACD", color=color.green, style=plot.style_histogram)
+
+
+
+Señal de Venta: orden {{strategy.order.action}} @ {{strategy.order.contracts}} efectuada en {{ticker}}. La nueva posición estratégica es {{strategy.position_size}}

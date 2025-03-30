@@ -38,9 +38,21 @@ colorMarketTop = wvf1 <= bandaInferior1 or wvf1 <= rangoBajo ? color.red :color.
 colorMarketBottom = wvf >= bandaSuperior or wvf >= rangoAlto ? color.lime : color.new(color.gray, 75)
 
 
-// Alerts added
-topAlert = colorMarketTop[0] == color.red and colorMarketTop[1] == color.new(color.gray, 75)
-bottomAlert = colorMarketBottom[0] == color.lime and colorMarketBottom[1] == color.new(color.gray, 75)
+// Alerts agregadas para las barras
+primeraMarcaTop = (colorMarketTop[0] == color.red)
+segundaMarcaTop = (colorMarketTop[1] == color.red) 
+terceraMarcaTop = (colorMarketTop[2] == color.red)
+cuartaMarcaTop = (colorMarketTop[3] == color.red)
+
+topAlert = primeraMarcaTop and segundaMarcaTop and terceraMarcaTop and cuartaMarcaTop
+
+
+primeraMarcaBottom = (colorMarketBottom[0] == color.lime)
+segundaMarcaBottom = (colorMarketBottom[1] == color.lime) 
+terceraMarcaBottom = (colorMarketBottom[2] == color.lime)
+cuartaMarcaBottom = (colorMarketBottom[3] == color.lime)
+
+bottomAlert = primeraMarcaBottom and segundaMarcaBottom and terceraMarcaBottom and cuartaMarcaBottom
 
 
 //Graficar barras
@@ -53,7 +65,7 @@ plot((-100 * wvf) , title = 'Market Bottom', style = plot.style_columns, linewid
 //--------------
 //Stochastic
 
-periodK = input.int(5, title="%K Length", minval=1)
+periodK = input.int(15, title="%K Length", minval=1)
 smoothK = input.int(3, title="%K Smoothing", minval=1)
 periodD = input.int(3, title="%D Smoothing", minval=1)
 k = ta.sma(ta.stoch(close, high, low, periodK), smoothK)
@@ -67,8 +79,10 @@ fill(h0, h1, color=color.rgb(33, 150, 243, 90), title="Background")
 
 
 // Crear una alerta combinada usando "or" junto a la estocástica
-estocasticaEnTop =k > 90 and d > 90
-estocasticaEnBottom = k < 10 and d < 10 
-alertaCombinada = (topAlert and estocasticaEnTop ) or (bottomAlert and estocasticaEnBottom)
+estocasticaEnTop =k > 85 and d > 85
+estocasticaEnBottom = k < 15 and d < 15 
+alertaCombinadaTop = (topAlert and estocasticaEnTop )
+alertaCombinadaBottom =  (bottomAlert and estocasticaEnBottom)
 
-alertcondition(alertaCombinada, 'Atento BTC! ', 'Top or bottom alcanzado!')
+alertcondition(alertaCombinadaTop, 'Atento BTC! ', 'Top alcanzado! Vender!')
+alertcondition(alertaCombinadaBottom, 'Atento BTC! ', 'Bottom alcanzado! Comprar')
