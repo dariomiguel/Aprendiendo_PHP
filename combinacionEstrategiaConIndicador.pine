@@ -1,5 +1,5 @@
 //@version=6
-strategy("Combinados", overlay=true, initial_capital=10, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
+strategy("Estrategia Compra/Venta", overlay=true, initial_capital=10, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
 
 //====================
 // BARRAS VIX FIX
@@ -75,7 +75,7 @@ plot(ema200, color=color.blue, title="EMA 200")
 //====================
 // Estocástico para señales de compra/venta
 //====================
-periodoEstocastico = 15
+periodoEstocastico = 5
 suavizado = 3
 k = ta.sma(ta.stoch(close, high, low, periodoEstocastico), suavizado)
 d = ta.sma(k, suavizado)
@@ -91,7 +91,7 @@ tendenciaDiariaAlcista = request.security(syminfo.tickerid, "D", ta.ema(close, 5
 crossUnderSignal = ta.crossunder(k, d)
 
 // Utilizar la variable en la condición
-sellSignal = tendenciaDiariaAlcista and crossUnderSignal  and topAlert //and (close < ema20)
+sellSignal = tendenciaDiariaAlcista and crossUnderSignal  and topAlert //muy restrictivo y no agarra posibles buenas ventas and (close < ema20)
 
 atr = ta.atr(15)
 entryPrice = close
@@ -100,12 +100,51 @@ if (sellSignal)
     strategy.entry("Sell", strategy.short)
     stopLoss = entryPrice + (atr * 2)
     takeProfit = entryPrice - (atr * 3)
-    strategy.exit("StopLoss Sell", "Sell", stop=stopLoss, limit=takeProfit)
+    strategy.exit("Take Profit Sell", "Sell", stop=stopLoss, limit=takeProfit)
+
+
 alertcondition(sellSignal, title="Vender con SL Dinámico", message="¡Oportunidad de Venta!")
+
+
+//====================
+// Señal de COMPRA en estrategia
+//====================
+// tendenciaDiariaBajista = request.security(syminfo.tickerid, "D", ta.ema(close, 50) < ta.ema(close, 200))
+
+// Asignar el resultado de ta.crossover() a una variable global
+crossOverSignal = ta.crossover(k, d)
+
+// Utilizar la variable en la condición
+buySignal = tendenciaDiariaAlcista and crossOverSignal  and bottomAlert 
+
+if (buySignal)
+    strategy.entry("Buy", strategy.long)
+    stopLoss = entryPrice - (atr * 3)  // SL por debajo
+    takeProfit = entryPrice + (atr * 5) // TP por encima
+    strategy.exit("TP Buy", "Buy", stop=stopLoss, limit=takeProfit)
+
+alertcondition(buySignal, title="Alerta de Compra", message="¡Oportunidad de Compra!")
+
+// 1. Misma tendencia diaria alcista (para operar en dirección de tendencia)
+// 2. Cruce alcista del Estocástico
+// 3. Precio sobre EMA20 (confirmación momentum)
+// 4. Alerta de bottom en VIX Fix
+// 5. Filtros adicionales con RSI y MACD
+
+// buySignal = 
+//     tendenciaDiariaAlcista and       // Operar sólo en tendencia alcista mayor
+//     crossOverSignal and              // Cruce alcista Estocástico
+//     (close > ema20) and             // Precio sobre EMA20 (fortaleza)
+//     bottomAlert and                 // 4 barras verdes en VIX Fix (soporte)
+//     (rsiValue < 45) and             // RSI en zona de oversold
+//     (macdLine > signalLine)         // MACD alcista
+
+
 
 //====================
 // Indicador de Volumen
 //====================
+
 plot(volume / 1000, title="Volumen (x1000)", color=color.new(color.purple, 40), style=plot.style_columns)
 
 //====================
