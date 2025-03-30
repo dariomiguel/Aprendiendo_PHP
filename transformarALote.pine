@@ -1,0 +1,162 @@
+//@version=6
+strategy("Estrategia Compra/Venta", overlay=true, initial_capital=50, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
+
+//====================
+// BARRAS VIX FIX
+//====================
+
+
+periodoRetroceso = input(22, title = 'Período de retrocesos para máximos') //pd_LookBack Period Standard Deviation High
+largoDeBandaBollinger = input(20, title = 'Longitud de la Banda de Bollinger') //bbl_
+multiplicadorDeDesviasionEstandar = input.float(2.0, minval = 1, maxval = 5, title = 'Multiplicador de Desviación Estándar') //mult_Bollinger Band Standard Devaition Up
+periodoRetrocesoPercentil = input(50, title = 'Período de Retroceso para el Percentil Alto') //lb_Look Back Period Percentile High
+nivelPercentil = input(.85, title = 'Percentile - 0.90=90%, 0.95=95%, 0.99=99%') //ph_
+
+// Code to find bottom
+//
+//Calcula el precio más alto del cierre  en los últimos periodoRetroceso.
+wvf = (ta.highest(close, periodoRetroceso) - low) / ta.highest(close, periodoRetroceso) * 100
+
+desviacionEstandarWvf = multiplicadorDeDesviasionEstandar * ta.stdev(wvf, largoDeBandaBollinger) //sDev_
+lineaMedia = ta.sma(wvf, largoDeBandaBollinger)
+bandaInferior = lineaMedia - desviacionEstandarWvf
+bandaSuperior = lineaMedia + desviacionEstandarWvf
+
+rangoAlto = ta.highest(wvf, periodoRetrocesoPercentil) * nivelPercentil
+
+
+// Code to find top
+//
+//Calcula el precio más bajo del cierre  en los últimos periodoRetroceso.
+wvf1 = (ta.lowest(close, periodoRetroceso) - high) / ta.lowest(close, periodoRetroceso) * 100
+
+desviacionEstandarWvf1 = multiplicadorDeDesviasionEstandar * ta.stdev(wvf1, largoDeBandaBollinger) //sDev1_
+lineaMedia1 = ta.sma(wvf1, largoDeBandaBollinger)
+bandaInferior1 = lineaMedia1 - desviacionEstandarWvf1
+bandaSuperior1 = lineaMedia1 + desviacionEstandarWvf1
+
+rangoBajo = ta.lowest(wvf1, periodoRetrocesoPercentil) * nivelPercentil
+
+// Asignar colores a los rangos
+colorMarketTop = wvf1 <= bandaInferior1 or wvf1 <= rangoBajo ? color.red :color.new(color.gray, 75)
+colorMarketBottom = wvf >= bandaSuperior or wvf >= rangoAlto ? color.lime : color.new(color.gray, 75)
+
+
+// Alerts agregadas para las barras
+primeraMarcaTop = (colorMarketTop[0] == color.red)
+segundaMarcaTop = (colorMarketTop[1] == color.red) 
+terceraMarcaTop = (colorMarketTop[2] == color.red)
+cuartaMarcaTop = (colorMarketTop[3] == color.red)
+
+topAlert = primeraMarcaTop and segundaMarcaTop and terceraMarcaTop and cuartaMarcaTop
+
+
+primeraMarcaBottom = (colorMarketBottom[0] == color.lime)
+segundaMarcaBottom = (colorMarketBottom[1] == color.lime) 
+terceraMarcaBottom = (colorMarketBottom[2] == color.lime)
+cuartaMarcaBottom = (colorMarketBottom[3] == color.lime)
+
+bottomAlert = primeraMarcaBottom and segundaMarcaBottom and terceraMarcaBottom and cuartaMarcaBottom
+
+
+//====================
+// Cálculo de EMAs
+//====================
+ema20 = ta.ema(close, 20)
+ema50 = ta.ema(close, 50)
+ema100 = ta.ema(close, 100)
+ema200 = ta.ema(close, 200)
+
+plot(ema20, color=color.red, title="EMA 20")
+plot(ema50, color=color.orange, title="EMA 50")
+plot(ema100, color=color.aqua, title="EMA 100")
+plot(ema200, color=color.blue, title="EMA 200")
+
+//====================
+// Estocástico para señales de compra/venta
+//====================
+periodoEstocastico = 5
+suavizado = 3
+k = ta.sma(ta.stoch(close, high, low, periodoEstocastico), suavizado)
+d = ta.sma(k, suavizado)
+
+
+//====================
+// Señal de VENTA en estrategia
+//====================
+// Tendencia diaria evaluada en gráfico diario
+tendenciaDiariaAlcista = request.security(syminfo.tickerid, "D", ta.ema(close, 50) > ta.ema(close, 200))
+
+// Asignar el resultado de ta.crossunder() a una variable global
+crossUnderSignal = ta.crossunder(k, d)
+
+// Utilizar la variable en la condición
+sellSignal = tendenciaDiariaAlcista and crossUnderSignal  and topAlert //muy restrictivo y no agarra posibles buenas ventas and (close < ema20)
+
+atr = ta.atr(15)
+entryPrice = close
+
+if (sellSignal)
+    strategy.entry("Sell", strategy.short)
+    stopLoss = entryPrice + (atr * 2)
+    takeProfit = entryPrice - (atr * 3)
+    strategy.exit("Take Profit Sell", "Sell", stop=stopLoss, limit=takeProfit)
+
+
+alertcondition(sellSignal, title="Vender con SL Dinámico", message="¡Oportunidad de Venta!")
+
+
+//====================
+// Señal de COMPRA en estrategia
+//====================
+// tendenciaDiariaBajista = request.security(syminfo.tickerid, "D", ta.ema(close, 50) < ta.ema(close, 200))
+
+// Asignar el resultado de ta.crossover() a una variable global
+crossOverSignal = ta.crossover(k, d)
+
+// Utilizar la variable en la condición
+buySignal = tendenciaDiariaAlcista and crossOverSignal  and bottomAlert 
+
+if (buySignal)
+    strategy.entry("Buy", strategy.long)
+    stopLoss = entryPrice - (atr * 3)  // SL por debajo
+    takeProfit = entryPrice + (atr * 5) // TP por encima
+    strategy.exit("TP Buy", "Buy", stop=stopLoss, limit=takeProfit)
+
+alertcondition(buySignal, title="Alerta de Compra", message="¡Oportunidad de Compra!")
+
+// 1. Misma tendencia diaria alcista (para operar en dirección de tendencia)
+// 2. Cruce alcista del Estocástico
+// 3. Precio sobre EMA20 (confirmación momentum)
+// 4. Alerta de bottom en VIX Fix
+// 5. Filtros adicionales con RSI y MACD
+
+// buySignal = 
+//     tendenciaDiariaAlcista and       // Operar sólo en tendencia alcista mayor
+//     crossOverSignal and              // Cruce alcista Estocástico
+//     (close > ema20) and             // Precio sobre EMA20 (fortaleza)
+//     bottomAlert and                 // 4 barras verdes en VIX Fix (soporte)
+//     (rsiValue < 45) and             // RSI en zona de oversold
+//     (macdLine > signalLine)         // MACD alcista
+
+
+
+//====================
+// Indicador de Volumen
+//====================
+
+plot(volume / 1000, title="Volumen (x1000)", color=color.new(color.purple, 40), style=plot.style_columns)
+
+//====================
+// Indicador RSI
+//====================
+rsiValue = ta.rsi(close, 15)
+plot(rsiValue, title="RSI", color=color.blue)
+
+//====================
+// Indicador MACD
+//====================
+[macdLine, signalLine, histLine] = ta.macd(close, 12, 26, 9)
+plot(macdLine, title="MACD", color=color.red)
+plot(signalLine, title="MACD Señal", color=color.blue)
+plot(histLine, title="Histograma MACD", color=color.green, style=plot.style_histogram)
